@@ -4,3 +4,4 @@ halite.iml
 *.class
 *.log
 *.hlt
+out.txt
