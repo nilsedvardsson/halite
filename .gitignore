@@ -1,3 +1,6 @@
 halite
 .idea/
 halite.iml
+*.class
+*.log
+*.hlt
