@@ -1,3 +1,5 @@
+import java.io.File;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -10,6 +12,7 @@ public class MyBot {
     private static int myID;
 
     public static void main(String[] args) throws java.io.IOException {
+
         InitPackage iPackage = Networking.getInit();
         myID = iPackage.myID;
         gameMap = iPackage.map;
@@ -21,6 +24,9 @@ public class MyBot {
         int loop = 0;
         boolean b = true;
 
+        File f = new File("/Users/nilse/Developer/halite/out.txt");
+        FileWriter fw = new FileWriter(f);
+
         while (true) {
             gameMap = Networking.getFrame();
 
@@ -29,46 +35,23 @@ public class MyBot {
             GameHelper gameHelper = new GameHelper(myID, gameMap);
             MoveHandler moveHandler = new MoveHandler(gameMap);
 
-            if (loop == 1) {
-                startLocation = gameHelper.findStartLocation();
+            if (loop < 10) {
+
+                FastExpander fastExpander = new FastExpander(myID, gameMap, gameHelper, moveHandler, fw);
+                fastExpander.execute(2);
+
             }
-
-            int j = 1;
-
-            if (gameHelper.ownedSites() > 17) {
-                j = new Random().nextInt(5);
-            }
-
-
-            if (b) {
-
-                if (j == 0) {
-                    Expander expander = new Expander(myID, gameMap, moveHandler);
-                    expander.expand();
-
-                    Radial radial = new Radial(myID, gameMap, gameHelper, moveHandler);
-                    radial.execute();
-                }
-                else {
-                    Cross cross = new Cross(myID, gameMap, gameHelper, moveHandler);
-                    b = cross.execute(startLocation);
+            else {
+                if (f != null) {
+                    fw.close();
+                    f = null;
                 }
             }
-
-
-            if (!b) {
-                Expander expander = new Expander(myID, gameMap, moveHandler);
-                expander.expand();
-
-                Radial radial = new Radial(myID, gameMap, gameHelper, moveHandler);
-                radial.execute();
-            }
-
 
             ArrayList<Move> ms = moveHandler.getMoves();
 
             Networking.sendFrame(ms);
         }
-    }
 
+    }
 }

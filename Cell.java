@@ -20,7 +20,9 @@ public class Cell {
     }
 
     public Cell copy() {
-        return new Cell(x, y, isMy, strength, production);
+        Cell copy = new Cell(x, y, isMy, strength, production);
+        copy.moveDirection = moveDirection;
+        return copy;
     }
 
     public int getX() {
@@ -47,11 +49,41 @@ public class Cell {
         return production;
     }
 
+    public Direction getMoveDirection() {
+        return moveDirection;
+    }
+
     public boolean isMoved() {
         return moveDirection != null;
     }
 
     public void move(Direction direction) {
         this.moveDirection = direction;
+    }
+
+    public void handleMoveTo(Cell sourceCell) {
+
+        if (point.equals(sourceCell.getPoint())) {
+            strength += production;
+            sourceCell.moveDirection = null;
+        }
+        else {
+
+            if (isMy) {
+                strength += sourceCell.strength;
+            } else {
+                int tmp = strength - sourceCell.strength;
+
+                if (tmp > 0) {
+                    strength = tmp;
+                } else {
+                    strength = -tmp;
+                    isMy = true;
+                }
+            }
+
+            sourceCell.strength = 0;
+            sourceCell.moveDirection = null;
+        }
     }
 }
