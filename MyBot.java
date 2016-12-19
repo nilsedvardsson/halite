@@ -1,7 +1,4 @@
-import java.io.File;
-import java.io.FileWriter;
 import java.util.ArrayList;
-import java.util.Random;
 
 public class MyBot {
 
@@ -11,7 +8,7 @@ public class MyBot {
     private static GameMap gameMap;
     private static int myID;
 
-    public static void main(String[] args) throws java.io.IOException {
+    public static void main(String[] args) {
 
         InitPackage iPackage = Networking.getInit();
         myID = iPackage.myID;
@@ -22,29 +19,50 @@ public class MyBot {
         Location startLocation = null;
 
         int loop = 0;
-        boolean b = true;
-
-        File f = new File("/Users/nilse/Developer/halite/out.txt");
-        FileWriter fw = new FileWriter(f);
 
         while (true) {
             gameMap = Networking.getFrame();
 
             loop++;
 
+
             GameHelper gameHelper = new GameHelper(myID, gameMap);
             MoveHandler moveHandler = new MoveHandler(gameMap);
 
-            if (loop < 10) {
+            /*
+            Attacker attacker = new Attacker(myID, gameMap, gameHelper, moveHandler);
+            boolean underAttack = attacker.execute();
 
-                FastExpander fastExpander = new FastExpander(myID, gameMap, gameHelper, moveHandler, fw);
-                fastExpander.execute(2);
+            if (!underAttack) {
+
+                FastExpander fastExpander = new FastExpander(myID, gameMap, gameHelper, moveHandler);
+                fastExpander.execute();
+
+                Radial radial = new Radial(myID, gameMap, gameHelper, moveHandler);
+                radial.execute();
 
             }
-            else {
-                if (f != null) {
-                    fw.close();
-                    f = null;
+            */
+
+            FastExpander fastExpander = new FastExpander(myID, gameMap, gameHelper, moveHandler);
+            fastExpander.execute();
+
+
+
+            for (int y = 0; y < gameMap.height; y++) {
+                for (int x = 0; x < gameMap.width; x++) {
+
+                    Location loc = new Location(x, y);
+                    Site site = gameMap.getSite(loc);
+
+                    if (site.owner == myID) {
+                        Move move = new Move(loc, Direction.STILL);
+
+                        if (moveHandler.canBeAdded(move)) {
+                            moveHandler.add(move);
+                        }
+                    }
+
                 }
             }
 

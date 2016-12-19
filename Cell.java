@@ -10,17 +10,20 @@ public class Cell {
 
     private Direction moveDirection;
 
-    public Cell(int x, int y, boolean isMy, int strength, int production) {
+    private int owner;
+
+    public Cell(int x, int y, boolean isMy, int strength, int production, int owner) {
         this.x = x;
         this.y = y;
         this.point = new Point(x, y);
         this.isMy = isMy;
         this.strength = strength;
         this.production = production;
+        this.owner = owner;
     }
 
     public Cell copy() {
-        Cell copy = new Cell(x, y, isMy, strength, production);
+        Cell copy = new Cell(x, y, isMy, strength, production, owner);
         copy.moveDirection = moveDirection;
         return copy;
     }
@@ -39,6 +42,10 @@ public class Cell {
 
     public boolean isMy() {
         return isMy;
+    }
+
+    public int getOwner() {
+        return owner;
     }
 
     public int getStrength() {

@@ -1,107 +1,292 @@
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
 public class FastExpander {
 
     private int myID;
     private GameMap gameMap;
     private GameHelper gameHelper;
     private MoveHandler moveHandler;
-    private FileWriter fw;
 
-    public FastExpander(int myID, GameMap gameMap, GameHelper gameHelper, MoveHandler moveHandler, FileWriter fw) {
+    public FastExpander(int myID, GameMap gameMap, GameHelper gameHelper, MoveHandler moveHandler) {
         this.myID = myID;
         this.gameMap = gameMap;
         this.gameHelper = gameHelper;
         this.moveHandler = moveHandler;
-        this.fw = fw;
     }
 
-    public void execute(int steps) throws IOException{
+    public void execute() {
 
         Board board = new Board(null, myID, gameMap);
 
-        List<Board> out = new ArrayList<>();
-        out.add(board);
+        noHelp(board);
+        together(board);
+        getHelpFromOne(board);
+        getHelpFromTwo(board);
+        getHelpFromThree(board);
 
-
-
-        for (int i = 0; i < steps; i++) {
-
-            List<Board> in = new ArrayList<>();
-
-            while (in.size() != out.size()) {
-                long t0 = System.currentTimeMillis();
-
-                in = out;
-                out = doIt(in);
-
-                long t1 = System.currentTimeMillis();
-                long elasped = t1 - t0;
-                fw.write("e1: " + elasped + "\n");
-            }
-
-            long t2 = System.currentTimeMillis();
-
-            List<Board> children = out.stream().map(b -> b.makeChild()).collect(Collectors.toList());
-
-            long t3 = System.currentTimeMillis();
-            long elapsed2 = t3-t2;
-
-            fw.write("elsped2: " + elapsed2);
-
-
-            children.stream().forEach(c -> c.simulateNextFrame());
-
-            out = children;
-        }
-
-
-        Board bestBoard = out.stream().max(this::compareByProduction).get();
-
-        Board tmp = bestBoard;
-
-        while (!tmp.isRoot()) {
-            tmp = tmp.getParent();
-        }
-
-        for (Cell cell : tmp.getMyCells()) {
-            Move move = new Move(new Location(cell.getX(), cell.getY()), cell.getMoveDirection());
-            moveHandler.add(move);
-        }
-    }
-
-    private int compareByProduction(Board board1, Board board2) {
-        return Integer.compare(board1.getProduction(), board2.getProduction());
-    }
-
-    private List<Board> doIt(List<Board> boards) throws IOException {
-        List<Board> result = new ArrayList<>();
-
-        for (Board board : boards) {
-            if (board.hasUnmovedCells()) {
-                result.addAll(handle(board));
-            }
-            else {
-                result.add(board);
+        for (Cell cell : board.getMyCells()) {
+            if (cell.isMoved()) {
+                Move move = new Move(new Location(cell.getX(), cell.getY()), cell.getMoveDirection());
+                moveHandler.add(move);
             }
         }
 
-        return result;
     }
 
-    private List<Board> handle(Board board) throws IOException {
+    private void noHelp(Board board) {
 
-        Cell unmoved = board.getAnyUnmovedCell();
+        for (Cell cell : board.getMyCells()) {
 
-        List<Board> boards = new ArrayList<>();
-        for (Direction direction : Direction.DIRECTIONS) {
-            boards.add(board.copy().move(unmoved.getPoint(), direction));
+            if (cell.isMoved()) {
+                continue;
+            }
+
+            Direction possibleDirection = possibleMove(board, cell);
+
+            if (possibleDirection != null) {
+                cell.move(possibleDirection);
+            }
+        }
+    }
+
+    private void together(Board board) {
+       for (Cell cell : board.getMyCells()) {
+
+           if (cell.isMoved()) {
+               continue;
+           }
+
+           boolean found = false;
+
+           for (Direction direction : Direction.CARDINALS) {
+
+               Cell target = board.getCell(cell, direction);
+
+               if (target.isMy()) {
+                   continue;
+               }
+
+               for (Direction direction2 : Direction.CARDINALS) {
+                   Cell partner = board.getCell(target, direction2);
+
+                   if (cell == partner) {
+                       continue;
+                   }
+
+                   if (!partner.isMy()) {
+                       continue;
+                   }
+
+                   if (cell.getStrength() + partner.getStrength() > target.getStrength()) {
+                       found = true;
+                       cell.move(direction);
+                       partner.move(opposite(direction2));
+                   }
+
+                   if (found) {
+                       break;
+                   }
+               }
+               if (found) {
+                   break;
+               }
+           }
+       }
+    }
+
+    private void getHelpFromThree(Board board) {
+        for (Cell cell : board.getMyCells()) {
+
+            if (cell.isMoved()) {
+                continue;
+            }
+
+            int neededStrength = strengthNeeded(board, cell);
+            boolean found = false;
+
+            for (Direction direction1 : Direction.CARDINALS) {
+                for (Direction direction2 : Direction.CARDINALS) {
+                    for (Direction direction3 : Direction.CARDINALS) {
+
+                        if (direction1 == direction2 || direction1 == direction3 || direction2 == direction3) {
+                            continue;
+                        }
+
+                        Cell possibleHelper1 = board.getCell(cell, direction1);
+                        Cell possibleHelper2 = board.getCell(cell, direction2);
+                        Cell possibleHelper3 = board.getCell(cell, direction3);
+
+                        if (!possibleHelper1.isMy() || !possibleHelper2.isMy() || !possibleHelper3.isMy()) {
+                            continue;
+                        }
+
+                        if (possibleHelper1.isMoved() || possibleHelper2.isMoved() || possibleHelper3.isMoved()) {
+                            continue;
+                        }
+
+                        if (possibleHelper1.getStrength()
+                                + possibleHelper2.getStrength()
+                                + possibleHelper3.getStrength()
+                                > neededStrength) {
+
+                            possibleHelper1.move(opposite(direction1));
+                            possibleHelper2.move(opposite(direction2));
+                            possibleHelper3.move(opposite(direction3));
+
+                            found = true;
+                        }
+
+                        if (found) {
+                            break;
+                        }
+                    }
+                    if (found) {
+                        break;
+                    }
+                }
+                if (found) {
+                    break;
+                }
+            }
+
+        }
+    }
+
+    private void getHelpFromTwo(Board board) {
+        for (Cell cell : board.getMyCells()) {
+
+            if (cell.isMoved()) {
+                continue;
+            }
+
+            int neededStrength = strengthNeeded(board, cell);
+            boolean found = false;
+
+            for (Direction direction1 : Direction.CARDINALS) {
+                for (Direction direction2 : Direction.CARDINALS) {
+                    if (direction1 == direction2) {
+                        continue;
+                    }
+
+                    Cell possibleHelper1 = board.getCell(cell, direction1);
+                    Cell possibleHelper2 = board.getCell(cell, direction2);
+
+                    if (!possibleHelper1.isMy() || !possibleHelper2.isMy()) {
+                        continue;
+                    }
+
+                    if (possibleHelper1.isMoved() || possibleHelper2.isMoved()) {
+                        continue;
+                    }
+
+                    if (possibleHelper1.getStrength() + possibleHelper2.getStrength() > neededStrength) {
+                        possibleHelper1.move(opposite(direction1));
+                        possibleHelper2.move(opposite(direction2));
+                        found = true;
+                    }
+
+                    if (found) {
+                        break;
+                    }
+                }
+                if (found) {
+                    break;
+                }
+            }
+        }
+    }
+
+    private void getHelpFromOne(Board board) {
+        for (Cell cell : board.getMyCells()) {
+
+            if (cell.isMoved()) {
+                continue;
+            }
+
+            int neededStrength = strengthNeeded(board, cell);
+
+            for (Direction direction : Direction.CARDINALS) {
+                Cell possibleHelper = board.getCell(cell, direction);
+
+                if (!possibleHelper.isMy()) {
+                    continue;
+                }
+
+                if (possibleHelper.isMoved()) {
+                    continue;
+                }
+
+                if (possibleHelper.getStrength() > neededStrength) {
+                    possibleHelper.move(opposite(direction));
+                    break;
+                }
+            }
+        }
+    }
+
+    private int strengthNeeded(Board board, Cell cell) {
+        int minNeeded = 1000;
+
+        for (Direction direction : Direction.CARDINALS) {
+            Cell toOvertake = board.getCell(cell, direction);
+
+            if (toOvertake.isMy()) {
+                continue;
+            }
+
+            int needed = toOvertake.getStrength() - cell.getStrength();
+
+            if (needed < minNeeded) {
+                minNeeded = needed;
+            }
         }
 
-        return boards;
+        return minNeeded;
+    }
+
+    private void freezeWithoutMove(Board board) {
+        for (Cell cell : board.getMyCells()) {
+
+            if (cell.isMoved()) {
+                continue;
+            }
+
+            cell.move(Direction.STILL);
+
+        }
+
+    }
+
+    private Direction possibleMove(Board board, Cell cell) {
+        for (Direction direction : Direction.CARDINALS) {
+            Cell target = board.getCell(cell, direction);
+
+            if (target.isMy()) {
+                continue;
+            }
+
+            if (cell.getStrength() > target.getStrength()) {
+                return direction;
+            }
+        }
+        return null;
+    }
+
+    private Direction opposite(Direction direction) {
+        if (direction == Direction.NORTH) {
+            return Direction.SOUTH;
+        }
+
+        if (direction == Direction.SOUTH) {
+            return Direction.NORTH;
+        }
+
+        if (direction == Direction.WEST) {
+            return Direction.EAST;
+        }
+
+        if (direction == Direction.EAST) {
+            return Direction.WEST;
+        }
+
+        return direction;
     }
 }

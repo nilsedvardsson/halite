@@ -45,9 +45,11 @@ public class MoveHandler {
             return false;
         }
 
+        /*
         if (contains(to, move.loc)) {
             return false;
         }
+        */
 
         if (contains(to, newLocation(move))) {
             return false;
