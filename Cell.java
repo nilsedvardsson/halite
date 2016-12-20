@@ -9,6 +9,7 @@ public class Cell {
     private int production;
 
     private Direction moveDirection;
+    private boolean movedTo;
 
     private int owner;
 
@@ -25,6 +26,7 @@ public class Cell {
     public Cell copy() {
         Cell copy = new Cell(x, y, isMy, strength, production, owner);
         copy.moveDirection = moveDirection;
+        copy.movedTo = movedTo;
         return copy;
     }
 
@@ -70,6 +72,14 @@ public class Cell {
 
     public boolean isMoved() {
         return moveDirection != null;
+    }
+
+    public void registerMoveTo() {
+        this.movedTo = true;
+    }
+
+    public boolean hasMoveTo() {
+        return movedTo;
     }
 
     public void move(Direction direction) {

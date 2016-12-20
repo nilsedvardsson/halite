@@ -2,18 +2,15 @@ import java.util.*;
 
 public class Board {
 
-    private Board parent;
-    // private Map<Point, Cell> rootCells;
     private Map<Point, Cell> cells;
     private GameMap gameMap;
 
     private Set<Cell> myCells;
 
-    public Board(Board parent, int myID, GameMap gameMap) {
+    public Board(int myID, GameMap gameMap) {
         this.gameMap = gameMap;
         cells = new HashMap<>();
         myCells = new HashSet<>();
-        // rootCells = new HashMap<>();
 
         for (int y = 0; y < gameMap.height; y++) {
             for (int x = 0; x < gameMap.width; x++) {
@@ -33,50 +30,8 @@ public class Board {
         }
     }
 
-    private Board() {
-        cells = new HashMap<>();
-        myCells = new HashSet<>();
-    }
-
-    public Board makeChild() {
-        Board child = copy();
-        child.parent = this;
-        return child;
-    }
-
-    public Board copy() {
-        Board copy = new Board();
-        copy.parent = parent;
-        copy.gameMap = gameMap;
-        // copy.rootCells = rootCells;
-
-        for (Point p : cells.keySet()) {
-            Cell cellCopy = cells.get(p).copy();
-            copy.cells.put(p, cellCopy);
-
-            if (cellCopy.isMy()) {
-                copy.myCells.add(cellCopy);
-            }
-        }
-
-        return copy;
-    }
-
     public List<Cell> getMyCells() {
         return new ArrayList<>(myCells);
-    }
-
-    public boolean hasCellsToMove() {
-        return getAnyCellToMove() == null ? false : true;
-    }
-
-    public Cell getAnyCellToMove() {
-        for (Cell cell : myCells) {
-            if (!cell.isMoved()) {
-                return cell;
-            }
-        }
-        return null;
     }
 
     public Board move(Point point, Direction direction) {
@@ -85,24 +40,10 @@ public class Board {
         return this;
     }
 
-    public boolean isRoot() {
-        return parent == null;
-    }
-
-    public void simulateNextFrame() {
-        Set<Cell> toBeAdded = new HashSet<>();
-        for (Cell cell : getMyCells()) {
-            Cell target = getCell(cell.getPoint(), cell.getMoveDirection());
-
-            boolean isMyBeforeMove = target.isMy();
-            target.handleMoveTo(cell);
-            boolean isMyAfterMove = target.isMy();
-
-            if (!isMyBeforeMove && isMyAfterMove) {
-                toBeAdded.add(target);
-            }
-        }
-        myCells.addAll(toBeAdded);
+    public void move(Cell cell, Direction direction) {
+        cell.move(direction);
+        Cell target = getCell(cell, direction);
+        target.registerMoveTo();
     }
 
     public Cell getCell(Point point, Direction direction) {
@@ -134,35 +75,11 @@ public class Board {
         return cells.get(point);
     }
 
-    /*
-    public Board getRoot() {
-        if (isRoot()) {
-            return this;
-        } else {
-            return getParent().getRoot();
-        }
-    }
-    */
-
     public int getProduction() {
         return myCells.stream().mapToInt(c -> c.getProduction()).sum();
-        // return getMyCells().stream().mapToInt(c -> c.getProduction()).sum();
     }
 
     public int getStrength() {
         return myCells.stream().mapToInt(c -> c.getStrength()).sum();
-        // return getMyCells().stream().mapToInt(c -> c.getStrength()).sum();
-    }
-
-    public Board getParent() {
-        return parent;
-    }
-
-    public void freeze() {
-        for (Cell cell : myCells) {
-            if (!cell.isMoved() && cell.getStrength() < 3 * cell.getProduction()) {
-                cell.move(Direction.STILL);
-            }
-        }
     }
 }

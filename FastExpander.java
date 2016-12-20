@@ -14,7 +14,7 @@ public class FastExpander {
 
     public void execute() {
 
-        Board board = new Board(null, myID, gameMap);
+        Board board = new Board(myID, gameMap);
 
         noHelp(board);
         getHelpFromOne(board);
