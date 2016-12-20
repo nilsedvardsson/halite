@@ -1,3 +1,5 @@
+import java.util.Random;
+
 public class Attacker {
 
     private int myID;
@@ -12,46 +14,31 @@ public class Attacker {
         this.moveHandler = moveHandler;
     }
 
-    public boolean execute() {
+    public boolean execute(boolean flag) {
 
         Board board = new Board(null, myID, gameMap);
 
-        boolean underAttack = false;
-
-        for (Cell cell : board.getMyCells()) {
-            for (Direction direction : Direction.CARDINALS) {
-                Cell test = board.getCell(cell, direction);
-
-                if (!test.isMy() && test.getOwner() != 0) {
-                    underAttack = true;
-                    break;
-                }
-            }
-            if (underAttack) {
-                break;
-            }
-        }
-
-        if (!underAttack) {
-            return false;
-        }
-
-
         for (Cell cell : board.getMyCells()) {
 
-            if (cell.getStrength() == 255) {
-                cell.move(Direction.EAST);
-            }
-            else if (cell.getStrength() > 30) {
+            if (cell.getStrength() > 30) {
+                Direction dir = null;
 
-                if (cell.getX() % 2 == 0) {
-                    cell.move(Direction.EAST);
+                if (flag) {
+                    if (cell.getX() % 2 == 0) {
+                        dir = Direction.NORTH;
+                    } else {
+                        dir = Direction.SOUTH;
+                    }
+                } else {
+                    if (cell.getY() % 2 == 0) {
+                        dir = Direction.EAST;
+                    } else {
+                        dir = Direction.WEST;
+                    }
                 }
-                else {
-                    cell.move(Direction.NORTH);
-                }
-            }
 
+                cell.move(dir);
+            }
         }
 
         for (Cell cell : board.getMyCells()) {

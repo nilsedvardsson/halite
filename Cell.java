@@ -44,6 +44,14 @@ public class Cell {
         return isMy;
     }
 
+    public boolean isNeutral() {
+        return owner == 0;
+    }
+
+    public boolean isEnemy() {
+        return !isMy() && !isNeutral();
+    }
+
     public int getOwner() {
         return owner;
     }

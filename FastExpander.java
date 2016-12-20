@@ -17,7 +17,6 @@ public class FastExpander {
         Board board = new Board(null, myID, gameMap);
 
         noHelp(board);
-        together(board);
         getHelpFromOne(board);
         getHelpFromTwo(board);
         getHelpFromThree(board);
@@ -47,50 +46,6 @@ public class FastExpander {
         }
     }
 
-    private void together(Board board) {
-       for (Cell cell : board.getMyCells()) {
-
-           if (cell.isMoved()) {
-               continue;
-           }
-
-           boolean found = false;
-
-           for (Direction direction : Direction.CARDINALS) {
-
-               Cell target = board.getCell(cell, direction);
-
-               if (target.isMy()) {
-                   continue;
-               }
-
-               for (Direction direction2 : Direction.CARDINALS) {
-                   Cell partner = board.getCell(target, direction2);
-
-                   if (cell == partner) {
-                       continue;
-                   }
-
-                   if (!partner.isMy()) {
-                       continue;
-                   }
-
-                   if (cell.getStrength() + partner.getStrength() > target.getStrength()) {
-                       found = true;
-                       cell.move(direction);
-                       partner.move(opposite(direction2));
-                   }
-
-                   if (found) {
-                       break;
-                   }
-               }
-               if (found) {
-                   break;
-               }
-           }
-       }
-    }
 
     private void getHelpFromThree(Board board) {
         for (Cell cell : board.getMyCells()) {
@@ -228,7 +183,7 @@ public class FastExpander {
         for (Direction direction : Direction.CARDINALS) {
             Cell toOvertake = board.getCell(cell, direction);
 
-            if (toOvertake.isMy()) {
+            if (!toOvertake.isNeutral()) {
                 continue;
             }
 
@@ -259,7 +214,7 @@ public class FastExpander {
         for (Direction direction : Direction.CARDINALS) {
             Cell target = board.getCell(cell, direction);
 
-            if (target.isMy()) {
+            if (!target.isNeutral()) {
                 continue;
             }
 
