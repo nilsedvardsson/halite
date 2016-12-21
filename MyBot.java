@@ -1,3 +1,6 @@
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class MyBot {
@@ -14,6 +17,13 @@ public class MyBot {
 
         Networking.sendInit("MyJavaBot");
 
+        File f = new File("/Users/nilse/Developer/halite/out.txt");
+        FileWriter fw = null;
+        try {
+            fw = new FileWriter(f);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         int loop = 0;
 
@@ -27,10 +37,22 @@ public class MyBot {
 
             Board board = new Board(myID, gameMap);
 
-            if (loop < 30) {
-                VeryFastExpander veryFastExpander = new VeryFastExpander(myID, gameMap, gameHelper, moveHandler);
-                veryFastExpander.execute(board);
+            if (loop < 50) {
+                VeryFastExpander veryFastExpander = new VeryFastExpander(myID, gameMap, gameHelper, moveHandler, fw);
+                try {
+                    veryFastExpander.execute(board);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
 
+            }
+
+            if (loop == 50) {
+                try {
+                    fw.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
             else {
                 Radial2 radial = new Radial2(myID, gameMap, gameHelper, moveHandler);
@@ -41,8 +63,7 @@ public class MyBot {
                 if (cell.isMoved()) {
                     Move move = new Move(new Location(cell.getX(), cell.getY()), cell.getMoveDirection());
                     moveHandler.add(move);
-                }
-                else {
+                } else {
                     Move move = new Move(new Location(cell.getX(), cell.getY()), Direction.STILL);
                     moveHandler.add(move);
                 }

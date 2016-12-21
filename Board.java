@@ -93,6 +93,7 @@ public class Board {
                 return direction;
             }
         }
-        return null;
+        throw new RuntimeException("No direction between cells");
+        // return null;
     }
 }
