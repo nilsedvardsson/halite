@@ -14,16 +14,8 @@ public class MyBot {
 
         Networking.sendInit("MyJavaBot");
 
-        Location startLocation = null;
 
         int loop = 0;
-        boolean underAttack = false;
-
-        Stat currentStat = new Stat();
-        Stat oldStat = new Stat();
-
-        int mode = 0;
-        int modeCounter = 0;
 
         while (true) {
             gameMap = Networking.getFrame();
@@ -33,77 +25,26 @@ public class MyBot {
             GameHelper gameHelper = new GameHelper(myID, gameMap);
             MoveHandler moveHandler = new MoveHandler(gameMap);
 
+            Board board = new Board(myID, gameMap);
 
-            if (!underAttack) {
-                oldStat = currentStat;
-                currentStat = new Statistics(myID, gameMap, gameHelper, moveHandler).execute();
+            if (loop < 30) {
+                VeryFastExpander veryFastExpander = new VeryFastExpander(myID, gameMap, gameHelper, moveHandler);
+                veryFastExpander.execute(board);
 
-                if (oldStat != null) {
-
-                    if ((currentStat.territory <= oldStat.territory) &&
-                            (currentStat.strength <= oldStat.strength) &&
-                            (currentStat.production <= oldStat.production)) {
-
-                        underAttack = true;
-                    }
-
-                }
+            }
+            else {
+                Radial2 radial = new Radial2(myID, gameMap, gameHelper, moveHandler);
+                radial.execute(board);
             }
 
-
-            if (!underAttack) {
-
-                FastExpander fastExpander = new FastExpander(myID, gameMap, gameHelper, moveHandler);
-                fastExpander.execute();
-
-                Radial radial = new Radial(myID, gameMap, gameHelper, moveHandler);
-                radial.execute();
-
-            } else {
-
-                if (mode == 0) {
-
-                    MassMove massMove = new MassMove(myID, gameMap, gameHelper, moveHandler);
-                    massMove.execute(Direction.EAST);
-
-                    modeCounter++;
-
-                    if (modeCounter == 6) {
-                        mode = 1;
-                        modeCounter = 0;
-                    }
-
+            for (Cell cell : board.getMyCells()) {
+                if (cell.isMoved()) {
+                    Move move = new Move(new Location(cell.getX(), cell.getY()), cell.getMoveDirection());
+                    moveHandler.add(move);
                 }
                 else {
-                    Attacker attacker = new Attacker(myID, gameMap, gameHelper, moveHandler);
-                    underAttack = attacker.execute(true);
-
-                    modeCounter++;
-
-                    if (modeCounter == 30) {
-                        mode = 0;
-                        modeCounter = 0;
-                    }
-                }
-
-
-
-            }
-
-            for (int y = 0; y < gameMap.height; y++) {
-                for (int x = 0; x < gameMap.width; x++) {
-
-                    Location loc = new Location(x, y);
-                    Site site = gameMap.getSite(loc);
-
-                    if (site.owner == myID) {
-                        Move move = new Move(loc, Direction.STILL);
-
-                        if (moveHandler.canBeAdded(move)) {
-                            moveHandler.add(move);
-                        }
-                    }
-
+                    Move move = new Move(new Location(cell.getX(), cell.getY()), Direction.STILL);
+                    moveHandler.add(move);
                 }
             }
 

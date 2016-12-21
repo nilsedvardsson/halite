@@ -46,6 +46,10 @@ public class Board {
         target.registerMoveTo();
     }
 
+    public void move(Cell from, Cell to) {
+        move(from, getDirection(from, to));
+    }
+
     public Cell getCell(Point point, Direction direction) {
         return getCell(getPoint(point, direction));
     }
@@ -81,5 +85,14 @@ public class Board {
 
     public int getStrength() {
         return myCells.stream().mapToInt(c -> c.getStrength()).sum();
+    }
+
+    public Direction getDirection(Cell from, Cell to) {
+        for (Direction direction : Direction.CARDINALS) {
+            if (getCell(from, direction) == to) {
+                return direction;
+            }
+        }
+        return null;
     }
 }
