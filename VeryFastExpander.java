@@ -8,17 +8,19 @@ public class VeryFastExpander {
     private GameMap gameMap;
     private GameHelper gameHelper;
     private MoveHandler moveHandler;
+    private FileWriter fw;
 
-    public VeryFastExpander(int myID, GameMap gameMap, GameHelper gameHelper, MoveHandler moveHandler) {
+    public VeryFastExpander(int myID, GameMap gameMap, GameHelper gameHelper, MoveHandler moveHandler, FileWriter fw) {
         this.myID = myID;
         this.gameMap = gameMap;
         this.gameHelper = gameHelper;
         this.moveHandler = moveHandler;
+        this.fw = fw;
     }
 
-    public void execute(Board board) {
+    public void execute(Board board) throws IOException {
 
-
+        fw.write("*\n");
         directOvertakeNoHelp(board);
         directOvertakeHelp(board);
 
@@ -46,7 +48,7 @@ public class VeryFastExpander {
         }    
     }
 
-    private void directOvertakeHelp(Board board) {
+    private void directOvertakeHelp(Board board) throws IOException {
         for (Cell cell : board.getMyCells()) {
 
             if (cell.isMoved()) {
@@ -56,9 +58,18 @@ public class VeryFastExpander {
             for (Direction direction : Direction.CARDINALS) {
                 Cell target = board.getCell(cell, direction);
 
+                // TODO neutral ? enemy ?
                 if (target.isNeutral()) {
 
-                    List<Cell> helpers = getAdjacent(board, target, c -> (c.isMy() && !c.isMoved() && !c.hasMoveTo()));
+                    List<Cell> helpers = getAdjacent(board, target, c -> (c.isMy() && !c.isMoved() && !c.hasMoveTo() && (c != cell)));
+
+                    fw.write("--\n");
+                    printCellPos(cell);
+                    fw.write("Num helpers for: " + helpers.size() + "\n");
+
+                    for (Cell helper : helpers) {
+                        printCellPos(helper);
+                    }
 
                     if (helpers.isEmpty()) {
                         continue;
@@ -88,6 +99,10 @@ public class VeryFastExpander {
         }
     }
 
+    private void printCellPos(Cell cell) throws IOException {
+        fw.write("x: " + cell.getX() + ", y: " + cell.getY() + "\n");
+    }
+
     private List<Cell> getAdjacent(Board board, Cell cell, Predicate<Cell> predicate) {
         List result = new ArrayList();
         for (Direction direction : Direction.CARDINALS) {
@@ -98,26 +113,6 @@ public class VeryFastExpander {
             }
         }
         return result;
-    }
-
-    private Direction opposite(Direction direction) {
-        if (direction == Direction.NORTH) {
-            return Direction.SOUTH;
-        }
-
-        if (direction == Direction.SOUTH) {
-            return Direction.NORTH;
-        }
-
-        if (direction == Direction.WEST) {
-            return Direction.EAST;
-        }
-
-        if (direction == Direction.EAST) {
-            return Direction.WEST;
-        }
-
-        return direction;
     }
 
     private Direction getDirection(Board board,  Cell from, Cell to) {

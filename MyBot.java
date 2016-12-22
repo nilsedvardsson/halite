@@ -28,9 +28,21 @@ public class MyBot {
             Board board = new Board(myID, gameMap);
 
             if (loop < 50) {
-                VeryFastExpander veryFastExpander = new VeryFastExpander(myID, gameMap, gameHelper, moveHandler);
-                veryFastExpander.execute(board);
+                VeryFastExpander veryFastExpander = new VeryFastExpander(myID, gameMap, gameHelper, moveHandler, fw);
+                try {
+                    veryFastExpander.execute(board);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
 
+            }
+
+            if (loop == 50) {
+                try {
+                    fw.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
             else {
                 Radial2 radial = new Radial2(myID, gameMap, gameHelper, moveHandler);
