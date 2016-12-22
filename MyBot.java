@@ -40,6 +40,12 @@ public class MyBot {
             Board board = new Board(myID, gameMap);
 
             if (loop < 50) {
+                try {
+                    fw.write("LOOP #" + loop + "\n");
+                }
+                catch (IOException e) {
+                }
+
                 VeryFastExpander veryFastExpander = new VeryFastExpander(myID, gameMap, gameHelper, moveHandler, fw);
                 try {
                     veryFastExpander.execute(board);
@@ -48,17 +54,23 @@ public class MyBot {
                 }
 
             }
-
-            if (loop == 50) {
+            else if (loop < 100) {
+                Radial2 radial = new Radial2(myID, gameMap, gameHelper, moveHandler, fw);
                 try {
-                    fw.close();
-                } catch (IOException e) {
+                    radial.execute(board);
+                }
+                catch (IOException e) {
                     throw new RuntimeException(e);
                 }
             }
             else {
-                Radial2 radial = new Radial2(myID, gameMap, gameHelper, moveHandler);
-                radial.execute(board);
+                if (fw != null) {
+                    try {
+                        fw.close();
+                    }
+                    catch (IOException e) {}
+                    fw = null;
+                }
             }
 
             for (Cell cell : board.getMyCells()) {

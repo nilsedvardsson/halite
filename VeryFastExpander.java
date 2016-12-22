@@ -51,6 +51,7 @@ public class VeryFastExpander {
     }
 
     private void directOvertakeHelp(Board board) throws IOException {
+        fw.write("Total number of my cells: " + board.getMyCells().size() + "\n");
         for (Cell cell : board.getMyCells()) {
 
             if (cell.isMoved()) {

@@ -1,3 +1,5 @@
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 
 public class Radial2 {
@@ -6,15 +8,19 @@ public class Radial2 {
     private GameMap gameMap;
     private GameHelper gameHelper;
     private MoveHandler moveHandler;
+    private FileWriter fw = null;
 
-    public Radial2(int myID, GameMap gameMap, GameHelper gameHelper, MoveHandler moveHandler) {
+    public Radial2(int myID, GameMap gameMap, GameHelper gameHelper, MoveHandler moveHandler, FileWriter fw) {
         this.myID = myID;
         this.gameMap = gameMap;
         this.gameHelper = gameHelper;
         this.moveHandler = moveHandler;
+        this.fw = fw;
     }
 
-    public void execute(Board board) {
+    public void execute(Board board) throws IOException {
+
+        fw.write("---------------------------\n");
 
         for (Cell cell : board.getMyCells()) {
 
@@ -27,7 +33,8 @@ public class Radial2 {
             int acc = accumulate(board, cell, dir, 0);
 
             if (acc > 230) {
-                cell.move(dir);
+                fw.write("*");
+                board.move(cell, dir);
             }
         }
 
