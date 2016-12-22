@@ -27,7 +27,7 @@ public class MyBot {
 
             Board board = new Board(myID, gameMap);
 
-            if (loop < 30) {
+            if (loop < 50) {
                 VeryFastExpander veryFastExpander = new VeryFastExpander(myID, gameMap, gameHelper, moveHandler);
                 veryFastExpander.execute(board);
 

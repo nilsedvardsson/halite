@@ -39,6 +39,17 @@ public class Radial2 {
             return 0;
         }
 
+        if (direction == Direction.NORTH || direction == Direction.SOUTH) {
+            if (steps == gameMap.height) {
+                return 0;
+            }
+        }
+        else {
+            if (steps == gameMap.width) {
+                return 0;
+            }
+        }
+
         Cell neighbour = board.getCell(cell, direction);
 
         return steps * cell.getProduction() + cell.getStrength() + accumulate(board, neighbour, direction, steps + 1);

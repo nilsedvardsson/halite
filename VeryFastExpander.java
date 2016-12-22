@@ -18,19 +18,10 @@ public class VeryFastExpander {
 
     public void execute(Board board) {
 
-        // Board board = new Board(myID, gameMap);
-        
+
         directOvertakeNoHelp(board);
         directOvertakeHelp(board);
 
-        /*
-        for (Cell cell : board.getMyCells()) {
-            if (cell.isMoved()) {
-                Move move = new Move(new Location(cell.getX(), cell.getY()), cell.getMoveDirection());
-                moveHandler.add(move);
-            }
-        }
-        */
     }
 
     private void directOvertakeNoHelp(Board board) {
