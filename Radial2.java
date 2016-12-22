@@ -1,6 +1,6 @@
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Radial2 {
 
@@ -8,19 +8,15 @@ public class Radial2 {
     private GameMap gameMap;
     private GameHelper gameHelper;
     private MoveHandler moveHandler;
-    private FileWriter fw = null;
 
-    public Radial2(int myID, GameMap gameMap, GameHelper gameHelper, MoveHandler moveHandler, FileWriter fw) {
+    public Radial2(int myID, GameMap gameMap, GameHelper gameHelper, MoveHandler moveHandler) {
         this.myID = myID;
         this.gameMap = gameMap;
         this.gameHelper = gameHelper;
         this.moveHandler = moveHandler;
-        this.fw = fw;
     }
 
-    public void execute(Board board) throws IOException {
-
-        fw.write("---------------------------\n");
+    public void execute(Board board) {
 
         for (Cell cell : board.getMyCells()) {
 
@@ -33,12 +29,9 @@ public class Radial2 {
             int acc = accumulate(board, cell, dir, 0);
 
             if (acc > 230) {
-                fw.write("*");
                 board.move(cell, dir);
             }
         }
-
-
     }
 
     private int accumulate(Board board, Cell cell, Direction direction, int steps) {
@@ -64,7 +57,7 @@ public class Radial2 {
 
     private Direction getDirectionToOvertake(Board board, Cell cell) {
         Map<Direction, Integer> data = new HashMap<>();
-        Arrays.stream(Direction.CARDINALS).forEach(d -> data.put(d, getStepsToNonMy(board, cell, d, cell)));
+        Arrays.stream(Direction.CARDINALS).forEach(d -> data.put(d, getStepsToNonMy(board, null, d, cell)));
 
         int min = 100;
         Direction minDir = null;
@@ -81,6 +74,10 @@ public class Radial2 {
     private int getStepsToNonMy(Board board, Cell cell, Direction direction, Cell origin) {
         if (cell == origin) {
             return 0;
+        }
+
+        if (cell == null) {
+            cell = origin;
         }
 
         if (cell.isMy()) {

@@ -1,6 +1,3 @@
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 
 public class MyBot {
@@ -17,16 +14,6 @@ public class MyBot {
 
         Networking.sendInit("MyJavaBot");
 
-        File f = new File("/Users/nils/Developer/halite/out.txt");
-        FileWriter fw = null;
-        try {
-            fw = new FileWriter(f);
-        }
-        catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-
         int loop = 0;
 
         while (true) {
@@ -39,46 +26,19 @@ public class MyBot {
 
             Board board = new Board(myID, gameMap);
 
-            if (loop < 50) {
-                try {
-                    fw.write("LOOP #" + loop + "\n");
-                }
-                catch (IOException e) {
-                }
 
-                VeryFastExpander veryFastExpander = new VeryFastExpander(myID, gameMap, gameHelper, moveHandler, fw);
-                try {
-                    veryFastExpander.execute(board);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+            VeryFastExpander veryFastExpander = new VeryFastExpander(myID, gameMap, gameHelper, moveHandler);
+            veryFastExpander.execute(board);
 
-            }
-            else if (loop < 100) {
-                Radial2 radial = new Radial2(myID, gameMap, gameHelper, moveHandler, fw);
-                try {
-                    radial.execute(board);
-                }
-                catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            else {
-                if (fw != null) {
-                    try {
-                        fw.close();
-                    }
-                    catch (IOException e) {}
-                    fw = null;
-                }
-            }
+            Radial2 radial2 = new Radial2(myID, gameMap, gameHelper, moveHandler);
+            radial2.execute(board);
+
 
             for (Cell cell : board.getMyCells()) {
                 if (cell.isMoved()) {
                     Move move = new Move(new Location(cell.getX(), cell.getY()), cell.getMoveDirection());
                     moveHandler.add(move);
-                }
-                else {
+                } else {
                     Move move = new Move(new Location(cell.getX(), cell.getY()), Direction.STILL);
                     moveHandler.add(move);
                 }

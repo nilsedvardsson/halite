@@ -1,5 +1,3 @@
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
@@ -10,22 +8,50 @@ public class VeryFastExpander {
     private GameMap gameMap;
     private GameHelper gameHelper;
     private MoveHandler moveHandler;
-    private FileWriter fw;
 
-    public VeryFastExpander(int myID, GameMap gameMap, GameHelper gameHelper, MoveHandler moveHandler, FileWriter fw) {
+    public VeryFastExpander(int myID, GameMap gameMap, GameHelper gameHelper, MoveHandler moveHandler) {
         this.myID = myID;
         this.gameMap = gameMap;
         this.gameHelper = gameHelper;
         this.moveHandler = moveHandler;
-        this.fw = fw;
     }
 
-    public void execute(Board board) throws IOException {
+    public void execute(Board board) {
 
-        fw.write("*\n");
         directOvertakeNoHelp(board);
         directOvertakeHelp(board);
+        twoStepsOvertake(board);
 
+    }
+
+    private void twoStepsOvertake(Board board) {
+        for (Cell cell : board.getMyCells()) {
+
+            if (cell.isMoved()) {
+                continue;
+            }
+
+            if (cell.hasMoveTo()) {
+                continue;
+            }
+
+            List<Cell> targetCells = getAdjacent(board, cell, c -> c.isNeutral() && !c.hasMoveTo());
+
+            if (targetCells.isEmpty()) {
+                continue;
+            }
+
+            // TODO sort lowest to highest
+            int needed = targetCells.get(0).getStrength() - cell.getStrength();
+
+            List<Cell> helpers = getAdjacent(board, cell, c -> c.isMy() && !c.isMoved() && !c.hasMoveTo() && c.getStrength() > needed);
+
+            if (helpers.size() > 0) {
+                Cell helper = helpers.get(0);
+
+                board.move(helper, cell);
+            }
+        }
     }
 
     private void directOvertakeNoHelp(Board board) {
@@ -50,8 +76,7 @@ public class VeryFastExpander {
         }    
     }
 
-    private void directOvertakeHelp(Board board) throws IOException {
-        fw.write("Total number of my cells: " + board.getMyCells().size() + "\n");
+    private void directOvertakeHelp(Board board) {
         for (Cell cell : board.getMyCells()) {
 
             if (cell.isMoved()) {
@@ -65,14 +90,6 @@ public class VeryFastExpander {
                 if (target.isNeutral()) {
 
                     List<Cell> helpers = getAdjacent(board, target, c -> (c.isMy() && !c.isMoved() && !c.hasMoveTo() && (c != cell)));
-
-                    fw.write("--\n");
-                    printCellPos(cell);
-                    fw.write("Num helpers for: " + helpers.size() + "\n");
-
-                    for (Cell helper : helpers) {
-                        printCellPos(helper);
-                    }
 
                     if (helpers.isEmpty()) {
                         continue;
@@ -100,10 +117,6 @@ public class VeryFastExpander {
                 }
             }
         }
-    }
-
-    private void printCellPos(Cell cell) throws IOException {
-        fw.write("x: " + cell.getX() + ", y: " + cell.getY() + "\n");
     }
 
     private List<Cell> getAdjacent(Board board, Cell cell, Predicate<Cell> predicate) {
