@@ -1,3 +1,6 @@
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class MyBot {
@@ -13,6 +16,15 @@ public class MyBot {
         gameMap = iPackage.map;
 
         Networking.sendInit("MyJavaBot");
+
+        File f = new File("/Users/nils/Developer/halite/out.txt");
+        FileWriter fw = null;
+        try {
+            fw = new FileWriter(f);
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
 
         int loop = 0;
